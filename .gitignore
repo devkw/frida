@@ -5,7 +5,7 @@
 /elfutils
 /gettext
 /glib
-/glib-openssl
+/glib-networking
 /glib-schannel
 /gn
 /ipch

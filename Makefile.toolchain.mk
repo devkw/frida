@@ -6,10 +6,10 @@ repo_suffix = ".git"
 
 m4_version := 1.4.18
 autoconf_version := 2.69
-automake_version := 1.16.1
+automake_version := 1.16.2
 automake_api_version := 1.16
 libtool_version := 2.4.6
-gettext_version := 0.19.8.1
+gettext_version := 0.20.1
 
 gnu_mirror := saimei.ftp.acc.umu.se/mirror/gnu.org/gnu
 
@@ -176,7 +176,9 @@ build/.$1-stamp:
 build/ft-tmp-%/$1/Makefile: build/ft-env-%.rc build/.$1-stamp $4
 	$(RM) -r $$(@D)
 	mkdir -p $$(@D)
-	. $$< && cd $$(@D) && PATH=$$(shell pwd)/build/ft-$$*/bin:$$$$PATH ../../../$1/configure
+	. $$< \
+		&& cd $$(@D) \
+		&& PATH=$$(shell pwd)/build/ft-$$*/bin:$$$$PATH ../../../$1/configure
 
 $3: build/ft-env-%.rc build/ft-tmp-%/$1/Makefile
 	. $$< \
@@ -252,13 +254,13 @@ build/ft-%/bin/libtool: build/ft-env-%.rc build/ft-tmp-%/libtool/Makefile
 		&& make $(MAKE_J) install
 	@touch $@
 
-$(eval $(call make-tarball-module-rules,gettext,https://$(gnu_mirror)/gettext/gettext-$(gettext_version).tar.gz,build/ft-%/bin/autopoint,build/ft-%/bin/libtool,gettext-vasnprintf-apple-fix.patch))
+$(eval $(call make-tarball-module-rules,gettext,https://$(gnu_mirror)/gettext/gettext-$(gettext_version).tar.gz,build/ft-%/bin/autopoint,build/ft-%/bin/libtool,))
 
 $(eval $(call make-git-meson-module-rules,zlib,build/ft-%/lib/pkgconfig/zlib.pc,))
 
 $(eval $(call make-git-meson-module-rules,libffi,build/ft-%/lib/pkgconfig/libffi.pc,,))
 
-$(eval $(call make-git-meson-module-rules,glib,build/ft-%/bin/glib-genmarshal,build/ft-%/lib/pkgconfig/zlib.pc build/ft-%/lib/pkgconfig/libffi.pc,$(glib_iconv_option) -Dselinux=disabled -Dxattr=false -Dlibmount=false -Dinternal_pcre=true -Dtests=false))
+$(eval $(call make-git-meson-module-rules,glib,build/ft-%/bin/glib-genmarshal,build/ft-%/lib/pkgconfig/zlib.pc build/ft-%/lib/pkgconfig/libffi.pc,$(glib_iconv_option) -Dselinux=disabled -Dxattr=false -Dlibmount=disabled -Dinternal_pcre=true -Dtests=false))
 
 $(eval $(call make-git-meson-module-rules,pkg-config,build/ft-%/bin/pkg-config,build/ft-%/bin/glib-genmarshal,))
 

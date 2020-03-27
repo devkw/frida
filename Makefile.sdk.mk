@@ -5,10 +5,10 @@ MAKE_J ?= -j 8
 repo_base_url = https://github.com/frida
 repo_suffix := .git
 
-libiconv_version := 1.15
-elfutils_version := 1b1433d5670b75c4bd5c9b598e0b00fba6e82d90
-libdwarf_version := 20190110
-openssl_version := 1.1.1b
+libiconv_version := 1.16
+elfutils_version := elfutils-0.179
+libdwarf_version := 20200114
+openssl_version := 1.1.1f
 v8_api_version := 7.0
 
 gnu_mirror := saimei.ftp.acc.umu.se/mirror/gnu.org/gnu
@@ -65,7 +65,7 @@ ifeq ($(host_platform), qnx)
 	dwarf := build/fs-%/lib/libdwarf.a
 endif
 ifeq ($(host_platform),$(filter $(host_platform),macos ios linux android))
-	glib_tls_provider := build/fs-%/lib/pkgconfig/glib-openssl-static.pc
+	glib_tls_provider := build/fs-%/lib/pkgconfig/gioopenssl.pc
 endif
 ifeq ($(enable_v8), 1)
 	v8 := build/fs-%/lib/pkgconfig/v8-$(v8_api_version).pc
@@ -138,8 +138,7 @@ build/.libiconv-stamp:
 	$(RM) -r libiconv
 	mkdir libiconv
 	cd libiconv \
-		&& $(download) https://$(gnu_mirror)/libiconv/libiconv-$(libiconv_version).tar.gz | tar -xz --strip-components 1 \
-		&& patch -p1 < ../releng/patches/libiconv-android.patch
+		&& $(download) https://$(gnu_mirror)/libiconv/libiconv-$(libiconv_version).tar.gz | tar -xz --strip-components 1
 	@mkdir -p $(@D)
 	@touch $@
 
@@ -148,11 +147,7 @@ build/fs-tmp-%/libiconv/Makefile: build/fs-env-%.rc build/.libiconv-stamp
 	mkdir -p $(@D)
 	. $< \
 		&& cd $(@D) \
-		&& ../../../libiconv/configure \
-			--enable-static \
-			--disable-shared \
-			--enable-relocatable \
-			--disable-rpath
+		&& ../../../libiconv/configure
 
 build/fs-%/lib/libiconv.a: build/fs-env-%.rc build/fs-tmp-%/libiconv/Makefile
 	. $< \
@@ -167,7 +162,7 @@ build/.elfutils-stamp: build/fs-env-$(build_platform_arch).rc
 	git clone git://sourceware.org/git/elfutils.git
 	. $< \
 		&& cd elfutils \
-		&& git checkout $(elfutils_version) \
+		&& git checkout -b release $(elfutils_version) \
 		&& patch -p1 < ../releng/patches/elfutils-clang.patch \
 		&& patch -p1 < ../releng/patches/elfutils-android.patch \
 		&& autoreconf -ifv
@@ -286,19 +281,19 @@ $(eval $(call make-git-autotools-module-rules,libunwind,build/fs-%/lib/pkgconfig
 
 $(eval $(call make-git-meson-module-rules,libffi,build/fs-%/lib/pkgconfig/libffi.pc,,))
 
-$(eval $(call make-git-meson-module-rules,glib,build/fs-%/lib/pkgconfig/glib-2.0.pc,$(iconv) build/fs-%/lib/pkgconfig/zlib.pc build/fs-%/lib/pkgconfig/libffi.pc,$(glib_iconv_option) -Dselinux=disabled -Dxattr=false -Dlibmount=false -Dinternal_pcre=true -Dtests=false))
+$(eval $(call make-git-meson-module-rules,glib,build/fs-%/lib/pkgconfig/glib-2.0.pc,$(iconv) build/fs-%/lib/pkgconfig/zlib.pc build/fs-%/lib/pkgconfig/libffi.pc,$(glib_iconv_option) -Dselinux=disabled -Dxattr=false -Dlibmount=disabled -Dinternal_pcre=true -Dtests=false))
 
-$(eval $(call make-git-meson-module-rules,glib-openssl,build/fs-%/lib/pkgconfig/glib-openssl-static.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc build/fs-%/lib/pkgconfig/openssl.pc,-Dca_certificates=no))
+$(eval $(call make-git-meson-module-rules,glib-networking,build/fs-%/lib/pkgconfig/gioopenssl.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc build/fs-%/lib/pkgconfig/openssl.pc,-Dgnutls=disabled -Dopenssl=enabled -Dlibproxy=disabled -Dgnome_proxy=disabled -Dstatic_modules=true))
 
 $(eval $(call make-git-meson-module-rules,libgee,build/fs-%/lib/pkgconfig/gee-0.8.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc))
 
-$(eval $(call make-git-meson-module-rules,json-glib,build/fs-%/lib/pkgconfig/json-glib-1.0.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc,-Dintrospection=false -Dtests=false))
+$(eval $(call make-git-meson-module-rules,json-glib,build/fs-%/lib/pkgconfig/json-glib-1.0.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc,-Dintrospection=disabled -Dtests=false))
 
 $(eval $(call make-git-meson-module-rules,libpsl,build/fs-%/lib/pkgconfig/libpsl.pc,,))
 
 $(eval $(call make-git-meson-module-rules,libxml2,build/fs-%/lib/pkgconfig/libxml-2.0.pc,build/fs-%/lib/pkgconfig/zlib.pc build/fs-%/lib/pkgconfig/liblzma.pc,))
 
-$(eval $(call make-git-meson-module-rules,libsoup,build/fs-%/lib/pkgconfig/libsoup-2.4.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc build/fs-%/lib/pkgconfig/sqlite3.pc build/fs-%/lib/pkgconfig/libpsl.pc build/fs-%/lib/pkgconfig/libxml-2.0.pc,-Dgssapi=false -Dtls_check=false -Dgnome=false -Dintrospection=false -Dvapi=false -Dtests=false))
+$(eval $(call make-git-meson-module-rules,libsoup,build/fs-%/lib/pkgconfig/libsoup-2.4.pc,build/fs-%/lib/pkgconfig/glib-2.0.pc build/fs-%/lib/pkgconfig/sqlite3.pc build/fs-%/lib/pkgconfig/libpsl.pc build/fs-%/lib/pkgconfig/libxml-2.0.pc,-Dgssapi=disabled -Dtls_check=false -Dgnome=false -Dintrospection=disabled -Dvapi=disabled -Dtests=false))
 
 
 ifeq ($(FRIDA_ASAN), yes)
@@ -481,13 +476,6 @@ v8_buildtype_args := \
 	$(NULL)
 endif
 
-ifeq ($(host_platform_arch), android-x86_64)
-v8_arch_args := v8_enable_embedded_builtins=false
-endif
-ifneq ($(host_arch), x86_64)
-v8_arch_args := v8_enable_embedded_builtins=false
-endif
-
 ifeq ($(host_arch), x86)
 	v8_cpu := x86
 endif
@@ -609,7 +597,7 @@ build/fs-tmp-%/v8/build.ninja: v8-checkout/v8 build/fs-tmp-$(build_platform_arch
 	cd v8-checkout/v8 \
 		&& ../../build/fs-tmp-$(build_platform_arch)/gn/gn \
 			gen $(abspath $(@D)) \
-			--args='target_os="$(v8_os)" target_cpu="$(v8_cpu)" $(v8_cpu_args) $(v8_common_args) $(v8_buildtype_args) $(v8_arch_args) $(v8_platform_args)'
+			--args='target_os="$(v8_os)" target_cpu="$(v8_cpu)" $(v8_cpu_args) $(v8_common_args) $(v8_buildtype_args) $(v8_platform_args)'
 
 build/fs-tmp-%/v8/obj/libv8_monolith.a: build/fs-tmp-%/v8/build.ninja
 	$(NINJA) -C build/fs-tmp-$*/v8 v8_monolith
