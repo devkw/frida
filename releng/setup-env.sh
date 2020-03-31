@@ -713,7 +713,7 @@ ACLOCAL="aclocal $ACLOCAL_FLAGS"
 CONFIG_SITE="$FRIDA_BUILD/${frida_env_name_prefix}config-${host_platform_arch}.site"
 
 VALAC="$FRIDA_BUILD/${FRIDA_ENV_NAME:-frida}-${host_platform_arch}-valac"
-vala_impl="$FRIDA_TOOLROOT/bin/valac-0.46"
+vala_impl="$FRIDA_TOOLROOT/bin/valac-0.50"
 vala_flags="--vapidir=\"$FRIDA_PREFIX/share/vala/vapi\""
 if [ "$FRIDA_ENV_SDK" != 'none' ]; then
   vala_flags="$vala_flags --vapidir=\"$FRIDA_SDKROOT/share/vala/vapi\""
@@ -748,12 +748,12 @@ if ! grep -Eq "^$toolchain_version\$" "$FRIDA_TOOLROOT/.version" 2>/dev/null; th
       "$template" > "$target"
   done
 
-  vala_wrapper=$FRIDA_TOOLROOT/bin/valac-0.46
-  vala_impl=$FRIDA_TOOLROOT/bin/valac-0.46-impl
+  vala_wrapper=$FRIDA_TOOLROOT/bin/valac-0.50
+  vala_impl=$FRIDA_TOOLROOT/bin/valac-0.50-impl
   mv "$vala_wrapper" "$vala_impl"
   (
     echo "#!/bin/sh"
-    echo "exec \"$vala_impl\" --target-glib=2.62 \"\$@\" --vapidir=\"$FRIDA_TOOLROOT/share/vala-0.46/vapi\""
+    echo "exec \"$vala_impl\" --target-glib=2.62 \"\$@\" --vapidir=\"$FRIDA_TOOLROOT/share/vala-0.50/vapi\""
   ) > "$vala_wrapper"
   chmod 755 "$vala_wrapper"
 
