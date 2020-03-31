@@ -112,19 +112,19 @@ if [ -z "$FRIDA_HOST" ]; then
 fi
 
 if [ $host_platform = android ]; then
-  ndk_required_name="r20"
+  ndk_required=21
   if [ -n "$ANDROID_NDK_ROOT" ]; then
     if [ -f "$ANDROID_NDK_ROOT/source.properties" ]; then
       ndk_installed_version=$(grep Pkg.Revision "$ANDROID_NDK_ROOT/source.properties" | awk '{ split($NF, v, "."); print v[1]; }')
     else
       ndk_installed_version=$(cut -f1 -d" " "$ANDROID_NDK_ROOT/RELEASE.TXT")
     fi
-    if [ $ndk_installed_version -ne 20 ]; then
+    if [ $ndk_installed_version -ne $ndk_required ]; then
       (
         echo ""
-        echo "Unsupported NDK version $ndk_installed_version. Please install NDK $ndk_required_name."
+        echo "Unsupported NDK version $ndk_installed_version. Please install NDK r$ndk_required."
         echo ""
-        echo "Frida's SDK - the prebuilt dependencies snapshot - was compiled against $ndk_required_name,"
+        echo "Frida's SDK - the prebuilt dependencies snapshot - was compiled against r$ndk_required,"
         echo "and as we have observed the NDK ABI breaking over time, we ask that you install"
         echo "the exact same version."
         echo ""
