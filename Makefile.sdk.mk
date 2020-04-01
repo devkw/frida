@@ -9,7 +9,7 @@ libiconv_version := 1.16
 elfutils_version := elfutils-0.179
 libdwarf_version := 20200114
 openssl_version := 1.1.1f
-v8_api_version := 7.0
+v8_api_version := 8.0
 
 gnu_mirror := saimei.ftp.acc.umu.se/mirror/gnu.org/gnu
 
@@ -564,7 +564,6 @@ gn:
 build/fs-tmp-%/gn/build.ninja: build/fs-env-%.rc gn
 	. $< \
 		&& CC="$$CC" CXX="$$CXX" python gn/build/gen.py \
-			--no-sysroot \
 			--out-path $(abspath $(@D))
 
 build/fs-tmp-%/gn/gn: build/fs-tmp-%/gn/build.ninja
@@ -576,7 +575,7 @@ v8-checkout/depot_tools/gclient:
 	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git v8-checkout/depot_tools
 
 v8-checkout/.gclient: v8-checkout/depot_tools/gclient
-	cd v8-checkout && depot_tools/gclient config --spec 'solutions = [ \
+	cd v8-checkout && PATH=$(abspath v8-checkout/depot_tools):$$PATH depot_tools/gclient config --spec 'solutions = [ \
   { \
     "url": "$(repo_base_url)/v8.git", \
     "managed": False, \
@@ -588,9 +587,7 @@ v8-checkout/.gclient: v8-checkout/depot_tools/gclient
 '
 
 v8-checkout/v8: v8-checkout/.gclient
-	cd v8-checkout \
-		&& export PATH=$(abspath v8-checkout/depot_tools):$$PATH \
-		&& gclient sync
+	cd v8-checkout && PATH=$(abspath v8-checkout/depot_tools):$$PATH gclient sync
 	@touch $@
 
 build/fs-tmp-%/v8/build.ninja: v8-checkout/v8 build/fs-tmp-$(build_platform_arch)/gn/gn

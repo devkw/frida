@@ -11,7 +11,7 @@ frida_core_flags := --default-library static $(FRIDA_COMMON_FLAGS) $(FRIDA_MAPPE
 
 frida_tools := frida frida-discover frida-kill frida-ls-devices frida-ps frida-trace
 
-v8_api_version := 7.0
+v8_api_version := 8.0
 
 build/frida-env-%.rc: releng/setup-env.sh releng/config.site.in build/frida-version.h
 	FRIDA_HOST=$* \
